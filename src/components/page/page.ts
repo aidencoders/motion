@@ -4,9 +4,13 @@ export interface Composable {
   addChild(child: Component): void;
 }
 
+type OnCloseListener = () => void;
+
 class PageItemComponent
   extends BaseComponent<HTMLElement>
   implements Composable {
+  private closeListener?: OnCloseListener;
+
   constructor() {
     super(`
       <li class="page-item">
@@ -16,6 +20,14 @@ class PageItemComponent
         </div>
       </li>
     `);
+
+    const closeButton = this.element.querySelector(
+      ".close"
+    )! as HTMLButtonElement;
+
+    closeButton.onclick = () => {
+      this.closeListener && this.closeListener();
+    };
   }
 
   addChild(child: Component) {
@@ -24,6 +36,10 @@ class PageItemComponent
     )! as HTMLElement;
 
     child.attachTo(container);
+  }
+
+  setOnCloseListener(listener: OnCloseListener) {
+    this.closeListener = listener;
   }
 }
 export class PageComponent
@@ -38,5 +54,8 @@ export class PageComponent
 
     item.addChild(section);
     item.attachTo(this.element, "beforeend");
+    item.setOnCloseListener(() => {
+      item.removeFrom(this.element);
+    });
   }
 }
